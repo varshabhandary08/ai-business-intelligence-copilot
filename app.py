@@ -274,70 +274,89 @@ if uploaded_file:
     question = st.chat_input(
         "Ask a question about your business data..."
     )
+if question:
 
-    if question:
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": question
+        }
+    )
 
-        st.session_state.messages.append(
-            {
-                "role": "user",
-                "content": question
-            }
-        )
+    with st.chat_message("user"):
+        st.write(question)
 
-        with st.chat_message("user"):
-            st.write(question)
+    dataset_summary = f"""
+    Total Sales: {total_sales}
+    Total Profit: {total_profit}
+    Total Orders: {total_orders}
 
-        dataset_summary = f"""
-        Total Sales: {total_sales}
-        Total Profit: {total_profit}
-        Total Orders: {total_orders}
+    Top Region: {top_region}
+    Lowest Region: {lowest_region}
 
-        Top Region: {top_region}
-        Lowest Region: {lowest_region}
+    Top Category: {top_category}
+    Top Segment: {top_segment}
+    Best Month: {best_month}
 
-        Top Category: {top_category}
+    Sales by Region:
+    {sales_region.to_string(index=False)}
 
-        Top Segment: {top_segment}
+    Profit by Category:
+    {profit_category.to_string(index=False)}
+    """
 
-        Best Month: {best_month}
-
-        Sales by Region:
-        {sales_region.to_string(index=False)}
-
-        Profit by Category:
-        {profit_category.to_string(index=False)}
-        """
+    try:
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[
                 {
                     "role": "system",
-                    "content":
-                    "You are an expert business analyst. Answer questions using the provided business dataset summary."
+                    "content": (
+                        "You are an expert business analyst. "
+                        "Answer questions using the provided business dataset summary. "
+                        "Give clear, simple and useful business answers. "
+                        "Use the actual numbers from the dataset summary whenever relevant."
+                    )
                 },
                 {
                     "role": "user",
                     "content": f"""
-                    Dataset Summary:
+Dataset Summary:
 
-                    {dataset_summary}
+{dataset_summary}
 
-                    Question:
-                    {question}
-                    """
+Question:
+{question}
+"""
                 }
             ]
         )
 
         answer = response.choices[0].message.content
 
-        st.session_state.messages.append(
+    except Exception:
+
+        answer = (
+            "Sorry, I couldn't process your question right now. "
+            "Please try again in a moment."
+        )
+
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer
+        }
+    )
+
+    with st.chat_message("assistant"):
+        st.write(answer)
+    st.session_state.messages.append(
             {
                 "role": "assistant",
                 "content": answer
             }
         )
 
-        with st.chat_message("assistant"):
+    with st.chat_message("assistant"):
             st.write(answer)
