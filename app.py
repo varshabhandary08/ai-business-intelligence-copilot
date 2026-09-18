@@ -5,18 +5,53 @@ import plotly.express as px
 from groq import Groq
 from dotenv import load_dotenv
 
+# Load variables from .env for local development
 load_dotenv()
 
+# Get Groq API key from Streamlit Cloud or local .env
+try:
+    groq_api_key = st.secrets["GROQ_API_KEY"]
+except Exception:
+    groq_api_key = os.getenv("GROQ_API_KEY")
+
+# Check API key
+if not groq_api_key:
+    st.error("Groq API key is not configured.")
+    st.stop()
+
+# Create Groq client
 client = Groq(
-    client = Groq(
-    api_key=st.secrets["GROQ_API_KEY"]
-)
+    api_key=groq_api_key
 )
 
-# Page Title
+
+# ==========================
+# COLUMN DETECTION FUNCTION
+# ==========================
+
+def find_column(df, possible_names):
+
+    for col in df.columns:
+
+        for name in possible_names:
+
+            if col.strip().lower() == name.strip().lower():
+                return col
+
+    return None
+
+
+# ==========================
+# PAGE TITLE
+# ==========================
+
 st.title("AI Business Intelligence Copilot")
 
-# Upload CSV
+
+# ==========================
+# UPLOAD CSV
+# ==========================
+
 uploaded_file = st.file_uploader(
     "Upload Sales Dataset",
     type=["csv"]
